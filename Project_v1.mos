@@ -1,0 +1,77 @@
+!@encoding CP1252
+model ModelName
+uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+
+!sample declarations section
+declarations
+	!Set Definitions
+	p=1..100 !players
+	
+	!Decision Variables
+	x: array(p) of mpvar !Should player 'i' play or not
+
+	
+	!Data
+	RB: array(p) of integer      !Is player 'i' RB or not
+	WR: array(p) of integer      !Is player 'i' WR or not
+	TE: array(p) of integer      !Is player 'i' TE or not
+	DST: array(p) of integer     !Is player 'i' DST or not
+	QB: array(p) of integer      !Is player 'i' QB or not
+	Score: array(p) of real 	 !Projected Score of player 'i'
+	Salary: array(p) of real     !Salary of player 'i'
+	Position: array(p) of string !Position of Player (Only for writing in Output)
+	Name: array(p) of string     !Name of Player (Only for writing in Output)
+	
+end-declarations
+
+initializations from 'Data.txt'
+	RB
+	WR
+	QB
+	TE
+	DST
+	Salary
+	Score
+	Position
+	Name	
+end-initializations
+
+
+forall (i in p) do
+	x(i) is_binary
+end-do
+
+!Model
+
+Obj:= sum(i in p) x(i)*Score(i)
+
+!Salary Contraint
+sum(i in p) x(i)*Salary(i) <=50000
+
+!Total Numbers of Players in a team constraint 
+
+sum(i in p) x(i) = 6
+
+!Individual Position Constraints
+sum(i in p) x(i)*RB(i) >=1
+sum(i in p) x(i)*WR(i) >=1
+sum(i in p) x(i)*TE(i) >=1
+sum(i in p) x(i)*DST(i)=1
+sum(i in p) x(i)*QB(i)=1
+!
+
+maximize(Obj)
+
+!Output
+writeln("Model Solved - Optimal Objective is ",getobjval)
+
+forall(i in p | getsol(x(i))>0) do 
+writeln("x",i,"=",getsol(x(i)))
+writeln("Name","=",Name(i))
+writeln("Position","=",Position(i))
+writeln("Salary","=",Salary(i))
+writeln("Player Score","=",Score(i))
+writeln("--------")
+end-do
+
+end-model
